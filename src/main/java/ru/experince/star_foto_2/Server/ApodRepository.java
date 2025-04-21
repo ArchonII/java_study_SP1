@@ -12,4 +12,5 @@ import java.util.List;
 public interface ApodRepository extends JpaRepository<ApodImage, Long> {
 //    @Query("select * from apod_image ai where ai.dateFetch = :date_fetch and ai.user = :id_user")
     List<ApodImage> findByDatefetchAndUserId(LocalDate dt_fetch, long id_user);
+    List<ApodImage> findByUserIdAndDategen(long id_user, LocalDate dt_create);
 }

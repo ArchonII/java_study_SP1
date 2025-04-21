@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.experince.star_foto_2.Entity.Apod;
 
+import java.util.List;
+
 @FeignClient(name = "outerapod", url = "https://api.nasa.gov/planetary/")
 public interface ApodClientOuter {
     @RequestMapping(method = RequestMethod.GET, value = "/apod")
@@ -13,6 +15,9 @@ public interface ApodClientOuter {
 
     @RequestMapping(method = RequestMethod.GET, value = "/apod")
     Apod getApod(@RequestParam(value="api_key") String key, @RequestParam(value="date") String date);
+
+    @RequestMapping(method = RequestMethod.GET, value = "/apod")
+    List<Apod> getApod(@RequestParam(value="api_key") String key, @RequestParam(value="count") int count);
 
 //    @RequestMapping(method = RequestMethod.GET, value = "/apod")
 //    Json getApodDate();

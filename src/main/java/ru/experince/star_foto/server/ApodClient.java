@@ -14,10 +14,10 @@ public interface ApodClient {
     @RequestMapping(method = RequestMethod.GET, value = "/inner/apod/now")
     ApodImage getApodnow(@RequestParam(value="id_user") long id_user);
 
-    @RequestMapping(method = RequestMethod.GET, value = "/inner/apod/{date}")
+    @RequestMapping(method = RequestMethod.GET, value = "/inner/apod/d/{date}")
     ApodImage getApodDate(@RequestParam(value="id_user") long id_user, @RequestParam(value="date") String date);
 
-    @RequestMapping(method = RequestMethod.GET, value = "/inner/apod/{count}")
+    @RequestMapping(method = RequestMethod.GET, value = "/inner/apod/c/{count}")
     List<ApodImage> getApodCount(@RequestParam(value="id_user") long id_user, @RequestParam(value="count") int count);
 
 

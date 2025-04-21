@@ -1,6 +1,7 @@
 package ru.experince.star_foto.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import ru.experince.star_foto.Entity.ApodImage;
 import ru.experince.star_foto.Entity.User;
@@ -23,6 +20,7 @@ import ru.experince.star_foto.Repository.UserRepository;
 import ru.experince.star_foto.server.ApodClient;
 
 import java.lang.reflect.Array;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -43,10 +41,10 @@ public class UserController {
 
     @Qualifier("UserRepository")
     @GetMapping("/apod/now")
-    @Operation(summary = "", description = "")
-    @ApiResponse(responseCode = "200", description = "")
+    @Operation(summary = "APOD now", description = "получить астрономическую карту дня за текущий день")
+    @ApiResponse(responseCode = "200", description = "ok")
     @ApiResponse(responseCode = "401", description = "пользователь не найден")
-    public ResponseEntity<String> getApodImg (@RequestParam String in_user) {
+    public ResponseEntity<String> getApodImg (@RequestParam("in_user")@Parameter(description = "Идентификатор пользователя", required = true)  String in_user) {
 
         try {
             List<User> user = userRepository.findByUnameLike(in_user);
@@ -66,10 +64,11 @@ public class UserController {
     }
 
     @GetMapping("/apod/one/{date}")
-    @Operation(summary = "", description = "")
-    @ApiResponse(responseCode = "200", description = "")
+    @Operation(summary = "APOD date", description = "получить астрономическую карту дня за определённый день")
+    @ApiResponse(responseCode = "200", description = "ok")
     @ApiResponse(responseCode = "401", description = "пользователь не найден")
-    public ResponseEntity<String> getApodImgDate(@RequestParam LocalDateTime dt, @RequestParam String in_user) {
+    public ResponseEntity<String> getApodImgDate(@PathVariable("date")@Parameter(description = "Требуемая дата", example = "2020-5-12", required = true) String dt,
+                                                 @RequestParam("in_user")@Parameter(description = "Идентификатор пользователя", required = true) String in_user) {
 
         try {
             List<User> user = userRepository.findByUnameLike(in_user);
@@ -79,7 +78,7 @@ public class UserController {
             }
 
             //TODO return starfield image url
-            ApodImage img = client.getApodDate(user.get(0).getId(), dt.format(DateTimeFormatter.ISO_DATE));
+            ApodImage img = client.getApodDate(user.get(0).getId(), dt);
             return new ResponseEntity<>(img.getUrl(), HttpStatus.OK);
         }
         catch (Exception e) {
@@ -91,10 +90,11 @@ public class UserController {
 
 
     @GetMapping("/apod/list/{count}")
-    @Operation(summary = "", description = "")
-    @ApiResponse(responseCode = "200", description = "")
+    @Operation(summary = "APOD rand list", description = "получить список случайных картин")
+    @ApiResponse(responseCode = "200", description = "ok")
     @ApiResponse(responseCode = "401", description = "пользователь не найден")
-    public ResponseEntity<List<String>> getApodImgListRand(@RequestParam int count, @RequestParam String in_user) {
+    public ResponseEntity<List<String>> getApodImgListRand(@PathVariable("count")@Parameter(description = "Требуемое количество", required = true)  int count,
+                                                           @RequestParam("in_user")@Parameter(description = "Идентификатор пользователя", required = true)  String in_user) {
 
         try {
             List<User> user = userRepository.findByUnameLike(in_user);
@@ -105,7 +105,8 @@ public class UserController {
 
             //TODO return starfield image url
             List<ApodImage> list_src = client.getApodCount(user.get(0).getId(), count);
-            List<String> list_res = new ArrayList<>();
+
+            List<String> list_res = list_src.stream().map(item -> item.getUrl()).toList();
 
             return new ResponseEntity<>(list_res, HttpStatus.OK);
         }
@@ -115,10 +116,16 @@ public class UserController {
     }
 
     @PostMapping("/user/create")
-    @Operation(summary = "", description = "")
+    @ApiResponse(responseCode = "200", description = "пользователь создан")
+    @ApiResponse(responseCode = "409", description = "Такой пользователь уже создан")
+    @Operation(summary = "user create", description = "регистрация нового пользователя")
     public ResponseEntity<User> createUser (@RequestParam String user) {
 
         try {
+            List<User> lu = userRepository.findByUnameLike(user);
+            if (!lu.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.CONFLICT);
+            }
             User _u = userRepository
                     .save(new User(user));
             return new ResponseEntity<>(_u, HttpStatus.CREATED);
